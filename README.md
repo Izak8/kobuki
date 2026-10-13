@@ -1,6 +1,21 @@
 # Kobuki Robot
 The source code for the Kobuki firmware lives here.
 
+## Getting Started
+
+To clone the repo, ensure that you include the `--recursive` option in order to
+fetch the included submodules (located at `extern`). To build the code manually
+you can type:
+
+`cmake -S . -B build/Debug -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain.cmake -DCMAKE_BUILD_TYPE=Debug`
+
+This configures the CMake build system. You can then build the code by typing:
+
+`cmake --build build/Debug`
+
+This produces an output file `build/Debug/app/kobuki_main/kobuki_main.elf`
+which can be flashed to the NUCELO board.
+
 ## Contribution Guidelines
 Development takes place in branches other than `main`. When working on a feature create a new branch
 (e.g. `git checkout -b dev/uart-wrapper`). Make sure to branch from the latest `main` ref. Features
@@ -35,8 +50,3 @@ at compile-time.
 BREAKING-CHANGE: Code dependent on the UART wrapper will need to change the arguments to the new
 types.
 ```
-
-## Getting Started
-
-TODO: write instructions for cloning repo, setting up development environment, and building/flashing
-the firmware.
