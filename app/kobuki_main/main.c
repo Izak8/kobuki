@@ -1,4 +1,1 @@
-
-int main(void) {
-    while(1);
-}
+int main(void) { for(;;); }

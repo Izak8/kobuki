@@ -22,3 +22,6 @@ add_subdirectory(src/ultrasonic)
 
 # main program
 add_subdirectory(app/kobuki_main)
+
+# prac6 test
+add_subdirectory(app/prac6_test)
