@@ -1,0 +1,5 @@
+{
+    "C_Cpp.intelliSenseEngine": "disabled",
+	"cortex-debug.gdbPath": "/usr/bin/gdb-multiarch",
+	"cortex-debug.liveWatchRefreshRate": 250,
+}	

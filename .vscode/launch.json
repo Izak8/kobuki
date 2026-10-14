@@ -1,0 +1,37 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/Debug/app/kobuki_main/kobuki_main.elf",
+            "name": "Flash & Debug kobuki_main",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/stlink-v2.cfg",
+                "target/stm32g4x.cfg"
+            ],
+			"liveWatch": {
+				"enabled": true,
+				"samplesPerSecond": 4
+			}
+        },
+                {
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/Debug/app/prac6_test/prac6_test.elf",
+            "name": "Flash & Debug prac6_test",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/stlink-v2.cfg",
+                "target/stm32g4x.cfg"
+            ],
+			"liveWatch": {
+				"enabled": true,
+				"samplesPerSecond": 4
+			}
+        }
+    ]
+}
