@@ -1,10 +1,11 @@
 #include <stdint.h>
+#include <stdlib.h>
 
 #define STM32G474xx
-#include "stm32g4xx.h"
-#include <stdlib.h>
-#include "uart.h"
-#include "kobuki.h"
+#include <stm32g4xx.h>
+
+#include <drivers/uart.h>
+#include <kobuki/kobuki.h>
 
 static volatile int32_t setpoint_distance_tick;
 static volatile int16_t setpoint_angle_deg;
@@ -148,42 +149,22 @@ void Kobuki_Read(Kobuki_Typedef *kobuki)
     checksum_result =
         Kobuki_Rx(kobuki_rx_buffer, SIZE_FEEDBACK);
 
-
     // Only update sensor variables if checksum is correct
     if (checksum_result == 0)
     {
-    //     kobuki->bumper =
-    //         kobuki_rx_buffer[BUMPER];
+        distance_LSB = kobuki_rx_buffer[DIST_LSB];
+        angle_LSB = kobuki_rx_buffer[ANGLE_LSB];
+        distance_MSB = (uint16_t)((uint16_t)kobuki_rx_buffer[DIST_MSB]<<8);
+        angle_MSB= (int16_t)((int16_t)kobuki_rx_buffer[ANGLE_MSB]<<8);
 
-    //     kobuki->wheeldrop =
-    //         kobuki_rx_buffer[WHEEL_DROP];
-
-    //     kobuki->cliff =
-    //         kobuki_rx_buffer[CLIFF];
-
-    //     kobuki->button =
-    //         kobuki_rx_buffer[BUTTON];
-    // }
-
-    // // If checksum fails, retain previous sensor values
-    // else
-    // {
-    //     // Do nothing
-    // }
-    distance_LSB = kobuki_rx_buffer[DIST_LSB];
-    angle_LSB = kobuki_rx_buffer[ANGLE_LSB];
-    distance_MSB = (uint16_t)((uint16_t)kobuki_rx_buffer[DIST_MSB]<<8);
-    angle_MSB= (int16_t)((int16_t)kobuki_rx_buffer[ANGLE_MSB]<<8);
-
-    kobuki->bumper= kobuki_rx_buffer[BUMPER];
-    kobuki->wheeldrop = kobuki_rx_buffer[WHEEL_DROP];
-    kobuki->cliff = kobuki_rx_buffer[CLIFF];
-    kobuki->button = kobuki_rx_buffer[BUTTON];
-    kobuki->distance = distance_LSB | distance_MSB;
-    kobuki->angle = angle_LSB | angle_MSB;
+        kobuki->bumper= kobuki_rx_buffer[BUMPER];
+        kobuki->wheeldrop = kobuki_rx_buffer[WHEEL_DROP];
+        kobuki->cliff = kobuki_rx_buffer[CLIFF];
+        kobuki->button = kobuki_rx_buffer[BUTTON];
+        kobuki->distance = distance_LSB | distance_MSB;
+        kobuki->angle = angle_LSB | angle_MSB;
     }
 
-    else{}
     kobuki -> rotation_complete = rotation_complete;
     kobuki -> distance_complete = distance_complete;
 
@@ -255,113 +236,3 @@ void Kobuki_Update_LEDs(Kobuki_LED_Enum led_1_colour, Kobuki_LED_Enum led_2_colo
     uint8_t payload[]={0x0X,0x02,GPO_lsb,GPO_msb};
     Kobuki_Tx(payload,sizeof(payload));
 }
-
-// =========================================================
-// DRIVE FORWARD / BACKWARD
-// Positive speed = forward
-// Negative speed = backward
-// =========================================================
-
-// void Kobuki_Drive(int16_t speed)
-// {
-//     // Construct Kobuki base-control payload
-//     //
-//     // Byte 0: Command ID
-//     // Byte 1: Command length
-//     // Byte 2: Speed LSB
-//     // Byte 3: Speed MSB
-//     // Byte 4: Radius LSB
-//     // Byte 5: Radius MSB
-//     //
-//     // Radius = 0x0000 means drive straight
-
-//     uint8_t payload[] =
-//     {
-//         0x01,
-//         0x04,
-//         0x00,
-//         0x00,
-//         0x00,
-//         0x00
-//     };
-
-
-//     // -----------------------------------------------------
-//     // SATURATE SPEED TO SAFE LIMIT
-//     // -----------------------------------------------------
-
-//     if (speed > SPEED_LIMIT)
-//     {
-//         speed = SPEED_LIMIT;
-//     }
-
-//     else if (speed < -SPEED_LIMIT)
-//     {
-//         speed = (~SPEED_LIMIT) + 1;
-//     }
-
-
-//     // -----------------------------------------------------
-//     // SPLIT 16-BIT SPEED INTO LITTLE-ENDIAN BYTES
-//     // -----------------------------------------------------
-
-//     // Least significant byte first
-//     payload[2] = (uint8_t)speed;
-
-//     // Most significant byte second
-//     payload[3] = (uint8_t)(speed >> 8);
-
-
-//     // Send complete payload
-//     Kobuki_Tx(payload, sizeof(payload));
-// }
-
-
-// // =========================================================
-// // ROTATE
-// // Positive speed = counter-clockwise
-// // Negative speed = clockwise
-// // =========================================================
-
-// void Kobuki_Rotate(int16_t speed)
-// {
-//     // Radius = 0x0001 creates rotation behaviour
-
-//     uint8_t payload[] =
-//     {
-//         0x01,
-//         0x04,
-//         0x00,
-//         0x00,
-//         0x01,
-//         0x00
-//     };
-
-
-//     // -----------------------------------------------------
-//     // SATURATE SPEED TO SAFE LIMIT
-//     // -----------------------------------------------------
-
-//     if (speed > SPEED_LIMIT)
-//     {
-//         speed = SPEED_LIMIT;
-//     }
-
-//     else if (speed < -SPEED_LIMIT)
-//     {
-//         speed = (~SPEED_LIMIT) + 1;
-//     }
-
-
-//     // -----------------------------------------------------
-//     // SPLIT 16-BIT SPEED INTO LITTLE-ENDIAN BYTES
-//     // -----------------------------------------------------
-
-//     payload[2] = (uint8_t)speed;
-
-//     payload[3] = (uint8_t)(speed >> 8);
-
-
-//     // Send complete payload
-//     Kobuki_Tx(payload, sizeof(payload));
-// }
