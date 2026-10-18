@@ -1,5 +1,6 @@
 {
     "C_Cpp.intelliSenseEngine": "disabled",
-	"cortex-debug.gdbPath": "/usr/bin/gdb-multiarch",
+	"cortex-debug.gdbPath.linux": "/usr/bin/gdb-multiarch",
+	"cortex-debug.armToolchainPath.windows": "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/12.2 mpacbti-rel1/bin",
 	"cortex-debug.liveWatchRefreshRate": 250,
-}	
+}
