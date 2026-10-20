@@ -3,4 +3,33 @@
 	"cortex-debug.gdbPath.linux": "/usr/bin/gdb-multiarch",
 	"cortex-debug.armToolchainPath.windows": "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/12.2 mpacbti-rel1/bin",
 	"cortex-debug.liveWatchRefreshRate": 250,
+	"editor.detectIndentation": false,
+	"editor.insertSpaces": false,
+	"editor.rulers": [
+		80,
+		120
+	],
+	"cmake.cmakePath": "cmake",
+	"cmake.configureArgs": [
+		"-DCMAKE_COMMAND=cmake"
+	],
+	"cmake.useCMakePresets": "always",
+	// TODO: this is temporary get rid of it after TODO solved in CMakePresets
+	"cmake.allowCommentsInPresetsFile": true,
+
+	// Clangd options
+	"clangd.arguments": [
+		// TODO: this works only on linux
+		// for this to work on windows we need a portable way of describing
+		// the absolute path to ARM GNU Toolchain ...
+		"--query-driver=/usr/bin/arm-none-eabi-gcc",
+		"--query-driver=/usr/bin/arm-none-eabi-g++"
+	],
+	// STM32 Clangd options
+	"stm32cube-ide-clangd.path": "cube",
+	"stm32cube-ide-clangd.arguments": [
+		"starm-clangd",
+		"--query-driver=${env:CUBE_BUNDLE_PATH}/gnu-tools-for-stm32/14.3.1+st.2/bin/arm-none-eabi-gcc*",
+		"--query-driver=${env:CUBE_BUNDLE_PATH}/gnu-tools-for-stm32/14.3.1+st.2/bin/arm-none-eabi-g++*"
+	],
 }

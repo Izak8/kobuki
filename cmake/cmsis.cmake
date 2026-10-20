@@ -6,6 +6,10 @@ add_library(cmsis_device_g4 INTERFACE
     ${CMSIS_DEVICE_G4_INC_PATH}
 )
 
+target_compile_definitions(cmsis_device_g4 INTERFACE
+	STM32G474xx
+)
+
 target_include_directories(cmsis_device_g4 INTERFACE
     ${CMSIS_DEVICE_G4_INC_PATH}
 )

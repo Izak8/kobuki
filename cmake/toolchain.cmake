@@ -13,5 +13,3 @@ set(MCU_FLAGS "-mcpu=cortex-m4 -mthumb")
 set(CMAKE_C_FLAGS_INIT ${MCU_FLAGS})
 set(CMAKE_CXX_FLAGS_INIT ${MCU_FLAGS})
 set(CMAKE_ASM_FLAGS_INIT ${MCU_FLAGS})
-
-add_compile_definitions(STM32G474xx)

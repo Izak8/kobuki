@@ -1,4 +1,3 @@
-#include "stm32g474xx.h"
 #include <gpio.h>
 
 #include <stm32g4xx.h>
