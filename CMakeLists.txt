@@ -23,5 +23,10 @@ add_subdirectory(src/ultrasonic)
 # main program
 add_subdirectory(app/kobuki_main)
 
+# movement test
+# this program will move the kobuki forward for a known distance, rotate 180
+# then go back that same distance, then rotate 180 and stop.
+add_subdirectory(app/movement_test)
+
 # prac6 test
 add_subdirectory(app/prac6_test)
