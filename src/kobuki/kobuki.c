@@ -112,8 +112,8 @@ void Kobuki_Read(Kobuki_Typedef *kobuki) {
 		distance_LSB = kobuki_rx_buffer[DIST_LSB];
 		angle_LSB = kobuki_rx_buffer[ANGLE_LSB];
 		
-		distance_MSB = kobuki_rx_buffer[DIST_MSB];
-		angle_MSB = kobuki_rx_buffer[ANGLE_MSB];
+		distance_MSB = (uint16_t)((uint16_t)kobuki_rx_buffer[DIST_MSB] << 8);
+		angle_MSB = (int16_t)((int16_t)kobuki_rx_buffer[ANGLE_MSB] << 8);
 		
 		kobuki->bumper = kobuki_rx_buffer[BUMPER];
 		kobuki->wheeldrop = kobuki_rx_buffer[WHEEL_DROP];

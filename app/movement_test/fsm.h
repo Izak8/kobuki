@@ -6,6 +6,9 @@ typedef enum {
 	IDLE,
 	MOVING,
 	ROTATING,
+	SEARCHING,
+	SCANNING,
+	FOLLOWING
 } FSM_RobotState;
 
 #endif/*FSM_H*/
