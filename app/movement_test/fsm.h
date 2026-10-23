@@ -8,7 +8,7 @@ typedef enum {
 	ROTATING,
 	SEARCHING,
 	SCANNING,
-	FOLLOWING
+	ALIGNING,
 } FSM_RobotState;
 
 #endif/*FSM_H*/

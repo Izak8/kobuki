@@ -9,18 +9,25 @@
 #define BUTTON_2_ROTATE		0x4U
 
 #define LINEAR_DISTANCE_MM	750U
-#define SEARCH_SPEED_MM_S	75U
+#define KNOWN_DISTANCE1_MM	550U
+#define KNOWN_DISTANCE2_MM	445U
+
+#define SEARCH_SPEED_MM_S	50U
 #define SCAN_SPEED_MM_S		25U
 
 Kobuki_Typedef kobuki;
+US_Typedef object;
+uint16_t scan_angle0 = 0;
+uint16_t scan_angle1 = 0;
+uint16_t scan_dist0 = 0;
+uint16_t scan_dist1 = 0;
 
 int main(void) {
 
 	// data structures to hold sensed information
-	US_Typedef object;
 	Kobuki_LED_Enum led1;
 	Kobuki_LED_Enum led2;
-	uint8_t move_complete =0;
+	uint8_t move_complete = 0;
 
 	// initialise the relevant peripherals
 	UART_init();
@@ -31,8 +38,6 @@ int main(void) {
 	FSM_RobotState state = IDLE;
 
 	uint8_t iteration = 0;
-	uint16_t scan_angle0 = 0;
-	uint16_t scan_angle1 = 0;
 
 	Kobuki_Update_LEDs(OFF, OFF);
 	// logic
@@ -49,7 +54,7 @@ int main(void) {
 		Ultrasonic_detect(&object);
 
 		// stop the robot in case of any obstacles
-		if(object.detected == true || kobuki.bumper != 0 || kobuki.cliff != 0) {
+		if(/* object.detected == 1 ||  */kobuki.bumper != 0 || kobuki.cliff != 0) {
 			break;
 		}
 
@@ -68,14 +73,9 @@ int main(void) {
 					state = MOVING;
 				} else if(kobuki.distance_complete == 1) {
 					Kobuki_Drive_Distance_Setpoint(kobuki.distance, 0);
-					// MOVING -> IDLE from distance complete
-					// rotate 180deg
-					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 135);
-					state = ROTATING;
 				} else if (kobuki.rotation_complete == 1) {
 					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 0);
-					Kobuki_Drive_Distance_Setpoint(kobuki.distance, LINEAR_DISTANCE_MM);
-					state=MOVING;
+
 				} else if(kobuki.button == BUTTON_2_ROTATE) {
 					// IDLE -> SEARCHING
 					state = SEARCHING;
@@ -107,33 +107,38 @@ int main(void) {
 				// rotate on spot until known distance is detected
 				// this distance is 3000mm but we will slowly bring this 
 				// acceptable range in by calibrating it
-				if(object.range_mm >= 2900 || object.range_mm <= 3100) {
+				if(	(object.range_mm >= (KNOWN_DISTANCE1_MM - 50) - 30  &&
+					 object.range_mm <= (KNOWN_DISTANCE1_MM - 50) + 30)
+
+					||
+
+					(object.range_mm >= (KNOWN_DISTANCE2_MM - 50) - 30  &&
+					 object.range_mm <= (KNOWN_DISTANCE2_MM - 50) + 30)
+					){
+
 					// SEARCHING -> SCANNING
 					// set the initial angle
-					scan_angle0 = kobuki.angle;
+					scan_angle0 = DEG_PER_TICK * kobuki.angle;
+					scan_dist0 = object.range_mm;
+					// once known distance is detected rotate an additional 16 degrees
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 18);
 					state = SCANNING;
 				} else {
 					// TODO: calibrate this speed
 					Kobuki_Rotate(SEARCH_SPEED_MM_S);
 				}
 				break;
+
 			case SCANNING:
 				Kobuki_Update_LEDs(OFF, GREEN);
-				// once known distance is detected, rotate much slower until
-				// the distance is NOT detected
-				if(object.range_mm <= 2900 || object.range_mm >= 3100) {
-					// SCANNING -> FOLLOWING
-					// set the final angle
-					scan_angle1 = kobuki.angle;
-					state = FOLLOWING;
+				if(kobuki.rotation_complete == 1) {
+					state=IDLE;
 				} else {
-					Kobuki_Rotate(SCAN_SPEED_MM_S);
+					Kobuki_Rotate_Angle(kobuki.angle);
 				}
 				break;
-			case FOLLOWING:
-				Kobuki_Update_LEDs(RED, GREEN);
-				// TODO: figure out finding average angle
-				state = IDLE;
+			case ALIGNING:
+				//Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -)
 				break;
 		}
 	}
