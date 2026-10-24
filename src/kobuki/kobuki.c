@@ -6,16 +6,6 @@
 #include <uart.h>
 #include <kobuki.h>
 
-// Parameters for distance and angle calculation
-#define PI						(3.14159)
-#define WHEEL_RADIUS			(35.0) // mm
-#define REVOLUTIONS_PER_TICK	(132.0 / 6545.0) / 52.0
-#define MM_PER_TICK				(2.0 * PI * WHEEL_RADIUS * REVOLUTIONS_PER_TICK)
-#define DEG_PER_TICK			(1.0 / 100.0)
-#define GAIN_ROTATE				(1.0 / 0.90)
-#define GAIN_DRIVE				(100.0 / 100.0)
-#define sign(x)					((int8_t)((x) >= 0 ? 1 : -1))
-
 static volatile int32_t setpoint_distance_tick;
 static volatile int16_t setpoint_angle_deg;
 static uint8_t rotation_complete = 0;
@@ -112,8 +102,8 @@ void Kobuki_Read(Kobuki_Typedef *kobuki) {
 		distance_LSB = kobuki_rx_buffer[DIST_LSB];
 		angle_LSB = kobuki_rx_buffer[ANGLE_LSB];
 		
-		distance_MSB = kobuki_rx_buffer[DIST_MSB];
-		angle_MSB = kobuki_rx_buffer[ANGLE_MSB];
+		distance_MSB = (uint16_t)((uint16_t)kobuki_rx_buffer[DIST_MSB] << 8);
+		angle_MSB = (int16_t)((int16_t)kobuki_rx_buffer[ANGLE_MSB] << 8);
 		
 		kobuki->bumper = kobuki_rx_buffer[BUMPER];
 		kobuki->wheeldrop = kobuki_rx_buffer[WHEEL_DROP];
@@ -140,12 +130,12 @@ void Kobuki_Drive(int16_t speed) {
 		0x00
 	};
 
-	if (speed > SPEED_LIMIT)
+	if (speed > LINEAR_SPEED_LIMIT)
 	{
-		speed = SPEED_LIMIT;
-	} else if (speed < -SPEED_LIMIT)
+		speed = LINEAR_SPEED_LIMIT;
+	} else if (speed < -LINEAR_SPEED_LIMIT)
 	{
-		speed = (~SPEED_LIMIT) + 1;
+		speed = (~LINEAR_SPEED_LIMIT) + 1;
 	}
 
 	payload[2] = (uint8_t)speed;
@@ -166,14 +156,14 @@ void Kobuki_Rotate(int16_t speed) {
 		0x00
 	};
 
-	if (speed > SPEED_LIMIT)
+	if (speed > ROTATE_SPEED_LIMIT)
 	{
-		speed = SPEED_LIMIT;
+		speed = ROTATE_SPEED_LIMIT;
 	}
 
-	else if (speed < -SPEED_LIMIT)
+	else if (speed < -ROTATE_SPEED_LIMIT)
 	{
-		speed = (~SPEED_LIMIT) + 1;
+		speed = (~ROTATE_SPEED_LIMIT) + 1;
 	}
 
 
