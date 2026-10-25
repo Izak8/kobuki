@@ -6,6 +6,7 @@ typedef enum {
 	IDLE,
 	MOVING,
 	ROTATING,
+	AVOIDING, // for now, just avoid obstacles by rotating away from them
 	CHECK,
 	ESTOP,
 } FSM_RobotState;
