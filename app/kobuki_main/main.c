@@ -10,6 +10,13 @@
 #define BUTTON_2_CALIBRATE	0x4U
 
 #define DIST_CALIBRATE		585U
+
+#define BUMPER_RIGHT        0x01U
+#define BUMPER_LEFT         0x04U
+#define CLIFF_RIGHT         0x01U
+#define CLIFF_LEFT          0x04U
+#define BUMPER_AVOID_ANGLE  5
+
 #define OFFSET				50U
 #define TOLERANCE			15U
 
@@ -72,10 +79,30 @@ int main(void) {
 			currentStage = START;
 		}
 
-		if(kobuki.bumper != 0 || kobuki.cliff != 0) {
-			// for now just ESTOP on bumper or cliff!
+		if(kobuki.cliff != 0U) {
+			if((kobuki.cliff != CLIFF_LEFT && kobuki.cliff != CLIFF_RIGHT) ||
+			(state != MOVING && state != AVOIDING)) {
 			state = ESTOP;
 			continue;
+		}
+}
+
+	if(((kobuki.bumper & BUMPER_LEFT) != 0U ||
+		(kobuki.cliff & CLIFF_LEFT) != 0U) && state == MOVING) {
+			// left bumper or cliff activated
+			Kobuki_Drive(0);
+			Kobuki_Rotate(0);
+			Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -BUMPER_AVOID_ANGLE);
+			state = AVOIDING;
+		}
+
+	if(((kobuki.bumper & BUMPER_RIGHT) != 0U ||
+		(kobuki.cliff & CLIFF_RIGHT) != 0U) && state == MOVING) {
+			// right bumper or cliff activated
+			Kobuki_Drive(0);
+			Kobuki_Rotate(0);
+			Kobuki_Rotate_Angle_Setpoint(kobuki.angle, BUMPER_AVOID_ANGLE);
+			state = AVOIDING;
 		}
 
 		if(kobuki.button == BUTTON_2_CALIBRATE) {
@@ -113,6 +140,18 @@ int main(void) {
 					Kobuki_Rotate_Angle(kobuki.angle);
 				}
 				break;
+			case AVOIDING:
+				if(kobuki.rotation_complete == 1 &&
+					kobuki.bumper == 0U && kobuki.cliff == 0U) {
+					Kobuki_Rotate(0);
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 0);
+					state = MOVING;
+				} else if(kobuki.rotation_complete == 1) {
+					Kobuki_Rotate(0);
+				} else {
+					Kobuki_Rotate_Angle(kobuki.angle);
+				}
+				break;
 			case CHECK:
 				if(	object.range_mm >= (DIST_CALIBRATE- OFFSET) - TOLERANCE  &&
 					object.range_mm <= (DIST_CALIBRATE- OFFSET) + TOLERANCE) {
@@ -124,6 +163,11 @@ int main(void) {
 				break;
 			case ESTOP:
 				break;
+		}
+
+		if(state == AVOIDING) {
+		// pause route progression during bumper avoidance
+			continue;
 		}
 
 		switch(currentStage) {
