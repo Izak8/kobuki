@@ -11,9 +11,12 @@
 #define LINEAR_DISTANCE_MM	750U
 #define KNOWN_DISTANCE1_MM	550U
 #define KNOWN_DISTANCE2_MM	445U
+#define DEPOSIT_BOLLARD1_MM 
+#define DEPOSIT_BOLLARD2_MM 
 
 #define SEARCH_SPEED_MM_S	50U
 #define SCAN_SPEED_MM_S		25U
+#define STOP_SHORT_MM       100U
 
 Kobuki_Typedef kobuki;
 US_Typedef object;
@@ -21,6 +24,8 @@ uint16_t scan_angle0 = 0;
 uint16_t scan_angle1 = 0;
 uint16_t scan_dist0 = 0;
 uint16_t scan_dist1 = 0;
+static uint16_t target_dist_mm=0;
+static uint8_t target_bollard=0;
 
 int main(void) {
 
@@ -140,6 +145,37 @@ int main(void) {
 			case ALIGNING:
 				//Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -)
 				break;
+			case DEPOSITSCAN:
+				Kobuki_Update_LEDs(GREEN,RED);
+				bool hit1=(object.range_mm >= (DEPOSIT_BOLLARD1_MM-50) - 30  &&
+					 object.range_mm <= (DEPOSIT_BOLLARD1_MM+50) + 30);
+					
+				bool hit2=(object.range_mm >= (DEPOSIT_BOLLARD2_MM-50) - 30  &&
+					 object.range_mm <= (DEPOSIT_BOLLARD2_MM+50) + 30);
+				
+				if(hit1||hit2){
+					if(hit1){
+						target_bollard=1;
+						target_dist_mm=DEPOSIT_BOLLARD1_MM;
+					}else{
+						target_bollard=2;
+						target_dist_mm=DEPOSIT_BOLLARD2_MM;
+					}
+					scan_angle0 = DEG_PER_TICK * kobuki.angle;
+					scan_dist0 = object.range_mm;
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 18);
+					state = DEPOSIT;
+				} else {
+					Kobuki_Rotate(SEARCH_SPEED_MM_S);
+				}
+				break;
+			case DEPOSIT;
+				Kobuki_Update_LEDs(GREEN,GREEN);
+				Kobuki_Drive_Distance_Setpoint(target_dist_mm - STOP_SHORT_MM);
+			break;
+
+		}
+			
 		}
 	}
 
