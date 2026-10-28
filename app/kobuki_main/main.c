@@ -23,13 +23,13 @@
 #define DIST_S_TO_A1		585U
 #define DIST_S_TO_B1		445U
 
-#define DIST_S_TO_A			1505U
-#define DIST_A_TO_E			1305U
+#define DIST_S_TO_A			1200U
+#define DIST_A_TO_E			1400U
 
-#define DIST_S_TO_B			1305U
-#define DIST_B_TO_E			1505U
+#define DIST_S_TO_B			1400U
+#define DIST_B_TO_E			1200U
 
-#define DIST_E_TO_D			1200U
+#define DIST_E_TO_D			860U
 
 #define SEARCH_SPEED_MM_S	50U
 #define SCAN_SPEED_MM_S		25U
@@ -84,25 +84,25 @@ int main(void) {
 			(state != MOVING && state != AVOIDING)) {
 			state = ESTOP;
 			continue;
-		}
-}
-
-	if(((kobuki.bumper & BUMPER_LEFT) != 0U ||
-		(kobuki.cliff & CLIFF_LEFT) != 0U) && state == MOVING) {
-			// left bumper or cliff activated
-			Kobuki_Drive(0);
-			Kobuki_Rotate(0);
-			Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -BUMPER_AVOID_ANGLE);
-			state = AVOIDING;
+			}	
 		}
 
-	if(((kobuki.bumper & BUMPER_RIGHT) != 0U ||
-		(kobuki.cliff & CLIFF_RIGHT) != 0U) && state == MOVING) {
-			// right bumper or cliff activated
-			Kobuki_Drive(0);
-			Kobuki_Rotate(0);
-			Kobuki_Rotate_Angle_Setpoint(kobuki.angle, BUMPER_AVOID_ANGLE);
-			state = AVOIDING;
+		if(((kobuki.bumper & BUMPER_LEFT) != 0U ||
+			(kobuki.cliff & CLIFF_LEFT) != 0U) && state == MOVING) {
+				// left bumper or cliff activated
+				Kobuki_Drive(0);
+				Kobuki_Rotate(0);
+				Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -BUMPER_AVOID_ANGLE);
+				state = AVOIDING;
+		}
+
+		if(((kobuki.bumper & BUMPER_RIGHT) != 0U ||
+			(kobuki.cliff & CLIFF_RIGHT) != 0U) && state == MOVING) {
+				// right bumper or cliff activated
+				Kobuki_Drive(0);
+				Kobuki_Rotate(0);
+				Kobuki_Rotate_Angle_Setpoint(kobuki.angle, BUMPER_AVOID_ANGLE);
+				state = AVOIDING;
 		}
 
 		if(kobuki.button == BUTTON_2_CALIBRATE) {
@@ -172,14 +172,16 @@ int main(void) {
 
 		switch(currentStage) {
 			case START:
-				if(	object.range_mm >= (DIST_S_TO_A1 - OFFSET) - TOLERANCE  &&
-					object.range_mm <= (DIST_S_TO_A1 - OFFSET) + TOLERANCE) {
+				if(	object.range_mm >= (DIST_S_TO_A1 - OFFSET) - (TOLERANCE + 15)  &&
+					object.range_mm <= (DIST_S_TO_A1 - OFFSET) + (TOLERANCE + 15)) {
 
 					Kobuki_Rotate(SEARCH_SPEED_MM_S);
-				} else if(	object.range_mm >= (DIST_S_TO_B1- OFFSET)- TOLERANCE  &&
-					object.range_mm <= (DIST_S_TO_B1- OFFSET)+ TOLERANCE) {
+
+				} else if(	object.range_mm >= (DIST_S_TO_B1 - OFFSET) - (TOLERANCE + 15)  &&
+							object.range_mm <= (DIST_S_TO_B1 - OFFSET) + (TOLERANCE + 15)) {
 				
 					Kobuki_Rotate(SEARCH_SPEED_MM_S);
+
 				} else {
 					Kobuki_Rotate(0);
 					currentStage = FIND;
@@ -263,7 +265,7 @@ int main(void) {
 				if(lastStage == ROTATE_S_TO_A) {
 					Kobuki_Drive_Distance_Setpoint(kobuki.distance, DIST_S_TO_A);
 					state = MOVING;
-					currentStage = MOVE_S_TO_A;
+					lastStage = MOVE_S_TO_A;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -296,7 +298,7 @@ int main(void) {
 				if(lastStage == ROTATE_A_TO_E) {
 					Kobuki_Drive_Distance_Setpoint(kobuki.distance, DIST_A_TO_E);
 					state = MOVING;
-					currentStage = MOVE_A_TO_E;
+					lastStage = MOVE_A_TO_E;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -312,7 +314,7 @@ int main(void) {
 					// aimed AE therefore rotate CCW 135deg to aim at D
 					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 135);
 					state = ROTATING;
-					currentStage = ROTATE_AE_TO_D;
+					lastStage = ROTATE_AE_TO_D;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -328,9 +330,9 @@ int main(void) {
 				if(lastStage == ALIGN_B1) {
 					Kobuki_Rotate(0);
 					// We are facing b1 so we rotate CCW 90deg to aim at B
-					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 90);
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 95);
 					state = ROTATING;
-					currentStage = ROTATE_S_TO_B;
+					lastStage = ROTATE_S_TO_B;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -346,7 +348,7 @@ int main(void) {
 				if(lastStage == ROTATE_S_TO_B) {
 					Kobuki_Drive_Distance_Setpoint(kobuki.distance, DIST_S_TO_B);
 					state = MOVING;
-					currentStage = MOVE_S_TO_B;
+					lastStage = MOVE_S_TO_B;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -363,7 +365,7 @@ int main(void) {
 					// facing SB therefore rotate CW 90 to aim at E
 					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -90);
 					state = ROTATING;
-					currentStage = ROTATE_B_TO_E;
+					lastStage = ROTATE_B_TO_E;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -377,9 +379,9 @@ int main(void) {
 				Kobuki_Update_LEDs(GREEN, GREEN);
 				// transition from ROTATE_B_TO_E -> MOVE_B_TO_E
 				if(lastStage == ROTATE_B_TO_E) {
-					Kobuki_Drive_Distance_Setpoint(kobuki.angle, DIST_B_TO_E);
+					Kobuki_Drive_Distance_Setpoint(kobuki.distance, DIST_B_TO_E);
 					state = MOVING;
-					currentStage = MOVE_B_TO_E;
+					lastStage = MOVE_B_TO_E;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -394,9 +396,9 @@ int main(void) {
 				// transition from MOVE_B_TO_E -> ROTATE_BE_TO_D
 				if(lastStage == MOVE_B_TO_E) {
 					// facing BE therefore rotate CW 135deg to aim at D
-					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -135);
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -130);
 					state = ROTATING;
-					currentStage = ROTATE_BE_TO_D;
+					lastStage = ROTATE_BE_TO_D;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -409,9 +411,9 @@ int main(void) {
 			case MOVE_E_TO_D:
 				// transition from either to -> MOVE_E_TO_D
 				if(lastStage == ROTATE_AE_TO_D || lastStage == ROTATE_BE_TO_D) {
-					Kobuki_Drive_Distance_Setpoint(kobuki.angle, DIST_E_TO_D);
+					Kobuki_Drive_Distance_Setpoint(kobuki.distance, DIST_E_TO_D);
 					state = MOVING;
-					currentStage = MOVE_E_TO_D;
+					lastStage = MOVE_E_TO_D;
 				}
 
 				// once robot stops, consider stage complete and set the stage

@@ -25,7 +25,7 @@
 #define ANGLE_MSB 25
 
 #define LINEAR_SPEED_LIMIT ( int16_t ) 150 // mm / s
-#define ROTATE_SPEED_LIMIT ( int16_t ) 100 // mm / s
+#define ROTATE_SPEED_LIMIT ( int16_t ) 150 // mm / s
 #define SEARCH_SPEED (( int16_t ) 75) // mm / s
 #define STOP (( int16_t ) 0) // mm / s
 #define MIN_SPEED (( int16_t ) 50) // mm / s
