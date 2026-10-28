@@ -33,6 +33,8 @@
 
 #define SEARCH_SPEED_MM_S	50U
 #define SCAN_SPEED_MM_S		25U
+#define BOLLARD_RADIUS		315U	
+#define STOP_SHORT_MM       100U
 
 // data structures to hold sensed information
 static Kobuki_Typedef kobuki;
@@ -424,13 +426,45 @@ int main(void) {
 				break;
 			
 			case FIND_DEPOSIT:
-				Kobuki_Rotate(10);
+				Kobuki_Update_LEDs(GREEN,RED);
+
+				if(lastStage == MOVE_E_TO_D) {
+					lastStage = FIND_DEPOSIT;
+				}
+				
+				if(object.distance_mm > BOLLARD_RADIUS) {
+					Kobuki_Rotate(SEARCH_SPEED_MM_S);
+				} else if (object.distance_mm <= BOLLARD_RADIUS) {
+					Kobuki_Rotate(0);
+					currentStage = ALIGN_DEPOSIT;
+				}
+
 				break;
-			case MOVE_DEPOSIT:
-				currentStage = END;
+			case ALIGN_DEPOSIT:
+				if(lastStage == FIND_DEPOSIT) {
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 16);
+					state = ROTATING;
+					lastStage = ALIGN_DEPOSIT;
+				}
+
+				if(state == IDLE) {
+					currentStage = DEPOSIT;
+				}
 				break;
+			case MOVE_DEPOSIT;
+				Kobuki_Update_LEDs(GREEN,GREEN);
+				if(object.distance_mm <= ((100 - OFFSET) + TOLERANCE)) {
+					Kobuki_Drive(-50);
+				} else if (object.distance_mm >= ((120 - OFFSET) + TOLERANCE)) {
+					Kobuki_Drive(50);
+				} else {
+					Kobuki_Drive(0);
+					currentStage = END;
+				}
+			break;
 			case END:
 				break;
+				
 		}
 	}
 

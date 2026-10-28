@@ -8,7 +8,7 @@ typedef enum {
 	ROTATING,
 	AVOIDING, // for now, just avoid obstacles by rotating away from them
 	CHECK,
-	ESTOP,
+	ESTOP
 } FSM_RobotState;
 
 typedef enum {
@@ -34,6 +34,7 @@ typedef enum {
 
 	MOVE_E_TO_D,
 	FIND_DEPOSIT,
+	ALIGN_DEPOSIT,
 	MOVE_DEPOSIT,
 
 	END
