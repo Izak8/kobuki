@@ -31,9 +31,9 @@
 
 #define DIST_E_TO_D			860U
 
-#define SEARCH_SPEED_MM_S	50U
-#define SCAN_SPEED_MM_S		25U
-#define BOLLARD_RADIUS		315U	
+#define SEARCH_SPEED_MM_S	100U
+#define SCAN_SPEED_MM_S		75U
+#define BOLLARD_RADIUS		350U
 #define STOP_SHORT_MM       100U
 
 // data structures to hold sensed information
@@ -197,7 +197,7 @@ int main(void) {
 					lastStage = FIND;
 				}
 
-				Kobuki_Rotate(75U);
+				Kobuki_Rotate(SEARCH_SPEED_MM_S);
 				
 				if(	object.range_mm >= (DIST_S_TO_A1 - OFFSET) - TOLERANCE  &&
 					object.range_mm <= (DIST_S_TO_A1 - OFFSET) + TOLERANCE) {
@@ -284,7 +284,7 @@ int main(void) {
 					// rotate CCW 90 to aim from A to E
 					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 90);
 					state = ROTATING;
-					currentStage = ROTATE_A_TO_E;
+					lastStage = ROTATE_A_TO_E;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -432,9 +432,9 @@ int main(void) {
 					lastStage = FIND_DEPOSIT;
 				}
 				
-				if(object.distance_mm > BOLLARD_RADIUS) {
+				if(object.range_mm > (BOLLARD_RADIUS - OFFSET) + TOLERANCE) {
 					Kobuki_Rotate(SEARCH_SPEED_MM_S);
-				} else if (object.distance_mm <= BOLLARD_RADIUS) {
+				} else if (object.range_mm <= (BOLLARD_RADIUS - OFFSET) + TOLERANCE) {
 					Kobuki_Rotate(0);
 					currentStage = ALIGN_DEPOSIT;
 				}
@@ -448,14 +448,17 @@ int main(void) {
 				}
 
 				if(state == IDLE) {
-					currentStage = DEPOSIT;
+					currentStage = MOVE_DEPOSIT;
 				}
 				break;
-			case MOVE_DEPOSIT;
+			case MOVE_DEPOSIT:
+				if(lastStage == ALIGN_DEPOSIT) {
+					lastStage = MOVE_DEPOSIT;
+				}
 				Kobuki_Update_LEDs(GREEN,GREEN);
-				if(object.distance_mm <= ((100 - OFFSET) + TOLERANCE)) {
+				if(object.range_mm < ((305 - OFFSET) + TOLERANCE)) {
 					Kobuki_Drive(-50);
-				} else if (object.distance_mm >= ((120 - OFFSET) + TOLERANCE)) {
+				} else if (object.range_mm >= ((310 - OFFSET) + TOLERANCE)) {
 					Kobuki_Drive(50);
 				} else {
 					Kobuki_Drive(0);
