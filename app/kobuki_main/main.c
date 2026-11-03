@@ -33,7 +33,7 @@
 
 #define SEARCH_SPEED_MM_S	100U
 #define SCAN_SPEED_MM_S		75U
-#define BOLLARD_RADIUS		350U
+#define BOLLARD_RADIUS		375U
 #define STOP_SHORT_MM       100U
 
 // data structures to hold sensed information
@@ -65,14 +65,15 @@ int main(void) {
 	Kobuki_Update_LEDs(OFF, OFF);
 
 	// logic
-	while(state != ESTOP) {
+	while(1) {
 		// read from the kobuki UART connection
 		Kobuki_Read(&kobuki);
 
 		if(kobuki.button == BUTTON_1_STOP) {
 			// stop the robot instantly if stop button pressed
-			state = ESTOP;
-			continue;
+			state = IDLE;
+			lastStage = END;
+			currentStage = END;
 		}
 
 		if(kobuki.button == BUTTON_0_START) {
@@ -81,13 +82,14 @@ int main(void) {
 			currentStage = START;
 		}
 
-		if(kobuki.cliff != 0U) {
+		// don't think this is needed ...
+		/* if(kobuki.cliff != 0U) {
 			if((kobuki.cliff != CLIFF_LEFT && kobuki.cliff != CLIFF_RIGHT) ||
 			(state != MOVING && state != AVOIDING)) {
 			state = ESTOP;
 			continue;
 			}	
-		}
+		} */
 
 		if(((kobuki.bumper & BUMPER_LEFT) != 0U ||
 			(kobuki.cliff & CLIFF_LEFT) != 0U) && state == MOVING) {
@@ -162,8 +164,6 @@ int main(void) {
 				} else {
 					Kobuki_Update_LEDs(GREEN, RED);
 				}
-				break;
-			case ESTOP:
 				break;
 		}
 
@@ -314,7 +314,7 @@ int main(void) {
 				Kobuki_Update_LEDs(RED, RED);
 				if(lastStage == MOVE_A_TO_E) {
 					// aimed AE therefore rotate CCW 135deg to aim at D
-					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 135);
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 130);
 					state = ROTATING;
 					lastStage = ROTATE_AE_TO_D;
 				}
@@ -398,7 +398,7 @@ int main(void) {
 				// transition from MOVE_B_TO_E -> ROTATE_BE_TO_D
 				if(lastStage == MOVE_B_TO_E) {
 					// facing BE therefore rotate CW 135deg to aim at D
-					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -130);
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -128);
 					state = ROTATING;
 					lastStage = ROTATE_BE_TO_D;
 				}
@@ -466,14 +466,8 @@ int main(void) {
 				}
 			break;
 			case END:
+				state=IDLE;
 				break;
-				
 		}
 	}
-
-	// 2 RED is ESTOP
-	Kobuki_Drive(0);
-	Kobuki_Rotate(0);
-	Kobuki_Update_LEDs(RED, RED);
-	while(1);
 }
