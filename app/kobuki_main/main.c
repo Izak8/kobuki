@@ -18,7 +18,7 @@
 #define BUMPER_AVOID_ANGLE  5
 
 #define OFFSET				50U
-#define TOLERANCE			15U
+#define TOLERANCE			20U
 
 #define DIST_S_TO_A1		585U
 #define DIST_S_TO_B1		445U
@@ -442,7 +442,7 @@ int main(void) {
 				break;
 			case ALIGN_DEPOSIT:
 				if(lastStage == FIND_DEPOSIT) {
-					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 16);
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 18);
 					state = ROTATING;
 					lastStage = ALIGN_DEPOSIT;
 				}
