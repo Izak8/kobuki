@@ -18,7 +18,7 @@
 #define BUMPER_AVOID_ANGLE  5
 
 #define OFFSET				50U
-#define TOLERANCE			15U
+#define TOLERANCE			20U
 
 #define DIST_S_TO_A1		585U
 #define DIST_S_TO_B1		445U
@@ -31,8 +31,10 @@
 
 #define DIST_E_TO_D			860U
 
-#define SEARCH_SPEED_MM_S	50U
-#define SCAN_SPEED_MM_S		25U
+#define SEARCH_SPEED_MM_S	100U
+#define SCAN_SPEED_MM_S		75U
+#define BOLLARD_RADIUS		375U
+#define STOP_SHORT_MM       100U
 
 // data structures to hold sensed information
 static Kobuki_Typedef kobuki;
@@ -63,14 +65,15 @@ int main(void) {
 	Kobuki_Update_LEDs(OFF, OFF);
 
 	// logic
-	while(state != ESTOP) {
+	while(1) {
 		// read from the kobuki UART connection
 		Kobuki_Read(&kobuki);
 
 		if(kobuki.button == BUTTON_1_STOP) {
 			// stop the robot instantly if stop button pressed
-			state = ESTOP;
-			continue;
+			state = IDLE;
+			lastStage = END;
+			currentStage = END;
 		}
 
 		if(kobuki.button == BUTTON_0_START) {
@@ -79,13 +82,14 @@ int main(void) {
 			currentStage = START;
 		}
 
-		if(kobuki.cliff != 0U) {
+		// don't think this is needed ...
+		/* if(kobuki.cliff != 0U) {
 			if((kobuki.cliff != CLIFF_LEFT && kobuki.cliff != CLIFF_RIGHT) ||
 			(state != MOVING && state != AVOIDING)) {
 			state = ESTOP;
 			continue;
 			}	
-		}
+		} */
 
 		if(((kobuki.bumper & BUMPER_LEFT) != 0U ||
 			(kobuki.cliff & CLIFF_LEFT) != 0U) && state == MOVING) {
@@ -161,8 +165,6 @@ int main(void) {
 					Kobuki_Update_LEDs(GREEN, RED);
 				}
 				break;
-			case ESTOP:
-				break;
 		}
 
 		if(state == AVOIDING) {
@@ -195,7 +197,7 @@ int main(void) {
 					lastStage = FIND;
 				}
 
-				Kobuki_Rotate(75U);
+				Kobuki_Rotate(SEARCH_SPEED_MM_S);
 				
 				if(	object.range_mm >= (DIST_S_TO_A1 - OFFSET) - TOLERANCE  &&
 					object.range_mm <= (DIST_S_TO_A1 - OFFSET) + TOLERANCE) {
@@ -282,7 +284,7 @@ int main(void) {
 					// rotate CCW 90 to aim from A to E
 					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 90);
 					state = ROTATING;
-					currentStage = ROTATE_A_TO_E;
+					lastStage = ROTATE_A_TO_E;
 				}
 
 				// once robot stops, consider stage complete and set the stage
@@ -312,7 +314,7 @@ int main(void) {
 				Kobuki_Update_LEDs(RED, RED);
 				if(lastStage == MOVE_A_TO_E) {
 					// aimed AE therefore rotate CCW 135deg to aim at D
-					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 135);
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 130);
 					state = ROTATING;
 					lastStage = ROTATE_AE_TO_D;
 				}
@@ -396,7 +398,7 @@ int main(void) {
 				// transition from MOVE_B_TO_E -> ROTATE_BE_TO_D
 				if(lastStage == MOVE_B_TO_E) {
 					// facing BE therefore rotate CW 135deg to aim at D
-					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -130);
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, -128);
 					state = ROTATING;
 					lastStage = ROTATE_BE_TO_D;
 				}
@@ -424,19 +426,48 @@ int main(void) {
 				break;
 			
 			case FIND_DEPOSIT:
-				Kobuki_Rotate(10);
+				Kobuki_Update_LEDs(GREEN,RED);
+
+				if(lastStage == MOVE_E_TO_D) {
+					lastStage = FIND_DEPOSIT;
+				}
+				
+				if(object.range_mm > (BOLLARD_RADIUS - OFFSET) + TOLERANCE) {
+					Kobuki_Rotate(SEARCH_SPEED_MM_S);
+				} else if (object.range_mm <= (BOLLARD_RADIUS - OFFSET) + TOLERANCE) {
+					Kobuki_Rotate(0);
+					currentStage = ALIGN_DEPOSIT;
+				}
+
+				break;
+			case ALIGN_DEPOSIT:
+				if(lastStage == FIND_DEPOSIT) {
+					Kobuki_Rotate_Angle_Setpoint(kobuki.angle, 18);
+					state = ROTATING;
+					lastStage = ALIGN_DEPOSIT;
+				}
+
+				if(state == IDLE) {
+					currentStage = MOVE_DEPOSIT;
+				}
 				break;
 			case MOVE_DEPOSIT:
-				currentStage = END;
-				break;
+				if(lastStage == ALIGN_DEPOSIT) {
+					lastStage = MOVE_DEPOSIT;
+				}
+				Kobuki_Update_LEDs(GREEN,GREEN);
+				if(object.range_mm < ((305 - OFFSET) + TOLERANCE)) {
+					Kobuki_Drive(-50);
+				} else if (object.range_mm >= ((310 - OFFSET) + TOLERANCE)) {
+					Kobuki_Drive(50);
+				} else {
+					Kobuki_Drive(0);
+					currentStage = END;
+				}
+			break;
 			case END:
+				state=IDLE;
 				break;
 		}
 	}
-
-	// 2 RED is ESTOP
-	Kobuki_Drive(0);
-	Kobuki_Rotate(0);
-	Kobuki_Update_LEDs(RED, RED);
-	while(1);
 }

@@ -9,6 +9,8 @@ typedef enum {
 	SEARCHING,
 	SCANNING,
 	ALIGNING,
+	DEPOSITSCAN,
+	DEPOSIT
 } FSM_RobotState;
 
 #endif/*FSM_H*/
